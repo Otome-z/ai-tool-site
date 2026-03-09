@@ -5,12 +5,14 @@ import type { AuthUser } from '../types/auth';
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
+  sessionChecked: boolean;
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
-    loading: false
+    loading: false,
+    sessionChecked: false
   }),
   getters: {
     isAuthenticated: (state) => Boolean(state.user)
@@ -20,6 +22,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       try {
         this.user = await register({ email, password });
+        this.sessionChecked = true;
       } finally {
         this.loading = false;
       }
@@ -28,6 +31,7 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true;
       try {
         this.user = await login({ email, password });
+        this.sessionChecked = true;
       } finally {
         this.loading = false;
       }
@@ -39,9 +43,17 @@ export const useAuthStore = defineStore('auth', {
         this.user = null;
       }
     },
+    async ensureSessionChecked() {
+      if (this.sessionChecked) {
+        return;
+      }
+      this.sessionChecked = true;
+      await this.fetchMe();
+    },
     async logout() {
       await logout();
       this.user = null;
+      this.sessionChecked = true;
     }
   }
 });

@@ -28,8 +28,9 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
+
   if (!authStore.user) {
-    await authStore.fetchMe();
+    await authStore.ensureSessionChecked();
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

@@ -7,10 +7,13 @@
     "backend"
   ],
   "scripts": {
-    "dev": "npm run dev -w backend & npm run dev -w frontend",
-    "dev:frontend": "npm run dev -w frontend",
-    "dev:backend": "npm run dev -w backend",
-    "build": "npm run build -w backend && npm run build -w frontend",
+    "dev": "concurrently \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:backend": "pnpm --dir backend dev",
+    "build": "pnpm --dir backend build && pnpm --dir frontend build",
     "init": "pnpm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

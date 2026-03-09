@@ -1,60 +1,100 @@
-import type { NextFunction, Request, Response } from 'express';
-import { z } from 'zod';
-import { getUserById, loginUser, registerUser } from '../services/auth.service.js';
-import { success } from '../utils/response.js';
-import { signToken } from '../utils/jwt.js';
-import { HttpError } from '../utils/http-error.js';
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from 'express'
+import { z } from 'zod'
+import {
+  getUserById,
+  loginUser,
+  registerUser,
+} from '../services/auth.service.js'
+import { success } from '../utils/response.js'
+import { signToken } from '../utils/jwt.js'
+import { HttpError } from '../utils/http-error.js'
 
 const authSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6)
-});
+  email: z.string().email('请输入正确的邮箱'),
+  password: z.string().min(6),
+})
 
 function setAuthCookie(res: Response, token: string) {
   res.cookie('token', token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  })
 }
 
-export async function register(req: Request, res: Response, next: NextFunction) {
+export async function register(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const { email, password } = authSchema.parse(req.body);
-    const user = await registerUser(email, password);
-    setAuthCookie(res, signToken({ userId: user.id }));
-    res.status(201).json(success(user));
-  } catch (error) {
-    next(error);
-  }
-}
+    const result = authSchema.safeParse(req.body)
 
-export async function login(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { email, password } = authSchema.parse(req.body);
-    const user = await loginUser(email, password);
-    setAuthCookie(res, signToken({ userId: user.id }));
-    res.json(success(user));
-  } catch (error) {
-    next(error);
-  }
-}
+    if (!result.success) {
+      const firstError = result.error.issues[0]
 
-export async function me(req: Request, res: Response, next: NextFunction) {
-  try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      throw new HttpError(401, 'unauthorized');
+      return res.status(400).json({
+        code: 400,
+        message: firstError.message,
+      })
     }
-    const user = await getUserById(userId);
-    res.json(success(user));
+    const { email, password } = result.data
+    const user = await registerUser(email, password)
+    setAuthCookie(res, signToken({ userId: user.id }))
+    res.status(201).json(success(user))
   } catch (error) {
-    next(error);
+    next(error)
+  }
+}
+
+export async function login(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const result = authSchema.safeParse(req.body)
+
+    if (!result.success) {
+      const firstError = result.error.issues[0]
+
+      return res.status(400).json({
+        code: 400,
+        message: firstError.message,
+      })
+    }
+    const { email, password } = result.data
+    const user = await loginUser(email, password)
+    setAuthCookie(res, signToken({ userId: user.id }))
+    res.json(success(user))
+  } catch (error) {
+    next(error)
+  }
+}
+
+export async function me(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const userId = req.user?.userId
+    if (!userId) {
+      throw new HttpError(401, 'unauthorized')
+    }
+    const user = await getUserById(userId)
+    res.json(success(user))
+  } catch (error) {
+    next(error)
   }
 }
 
 export function logout(_req: Request, res: Response) {
-  res.clearCookie('token');
-  res.json(success({}));
+  res.clearCookie('token')
+  res.json(success({}))
 }
