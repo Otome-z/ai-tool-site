@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import RegisterView from '../views/RegisterView.vue';
 import DashboardView from '../views/DashboardView.vue';
+import HomeView from '../views/HomeView.vue';
+import MainLayoutView from '../views/MainLayoutView.vue';
+import AiWatermarkView from '../views/AiWatermarkView.vue';
 import { useAuthStore } from '../stores/auth';
 
 const router = createRouter({
@@ -9,9 +12,29 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'dashboard',
-      component: DashboardView,
-      meta: { requiresAuth: true }
+      component: MainLayoutView,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          redirect: '/home'
+        },
+        {
+          path: 'home',
+          name: 'home',
+          component: HomeView
+        },
+        {
+          path: 'ai-watermark',
+          name: 'ai-watermark',
+          component: AiWatermarkView
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: DashboardView
+        }
+      ]
     },
     {
       path: '/login',
@@ -38,7 +61,7 @@ router.beforeEach(async (to) => {
   }
 
   if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
-    return { name: 'dashboard' };
+    return { name: 'home' };
   }
 
   return true;
