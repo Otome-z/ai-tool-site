@@ -1,0 +1,19 @@
+{
+  "name": "ai-tool-site",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --dir backend dev\" \"pnpm --dir frontend dev\"",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:backend": "pnpm --dir backend dev",
+    "build": "pnpm --dir backend build && pnpm --dir frontend build",
+    "init": "pnpm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
