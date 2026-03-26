@@ -1,5 +1,5 @@
 <template>
   <el-card>
-    <h2>welcome112233</h2>
+    <h2>welcome</h2>
   </el-card>
 </template>
